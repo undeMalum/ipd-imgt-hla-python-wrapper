@@ -1,0 +1,90 @@
+{
+  "data": [
+    {
+      "accession": "HLA00220",
+      "name": "B*27:01"
+    },
+    {
+      "accession": "HLA00221",
+      "name": "B*27:02:01:01"
+    },
+    {
+      "accession": "HLA00222",
+      "name": "B*27:03"
+    },
+    {
+      "accession": "HLA00223",
+      "name": "B*27:04:01"
+    },
+    {
+      "accession": "HLA00224",
+      "name": "B*27051"
+    },
+    {
+      "accession": "HLA00225",
+      "name": "B*27:05:02:01"
+    },
+    {
+      "accession": "HLA00226",
+      "name": "B*27:05:03"
+    },
+    {
+      "accession": "HLA00227",
+      "name": "B*27:06:01:01"
+    },
+    {
+      "accession": "HLA00228",
+      "name": "B*27:07:01"
+    },
+    {
+      "accession": "HLA00229",
+      "name": "B*27:08"
+    },
+    {
+      "accession": "HLA00230",
+      "name": "B*27:09"
+    },
+    {
+      "accession": "HLA00231",
+      "name": "B*27:10"
+    },
+    {
+      "accession": "HLA00232",
+      "name": "B*27:11"
+    },
+    {
+      "accession": "HLA00233",
+      "name": "B*27:12:01:01"
+    },
+    {
+      "accession": "HLA00234",
+      "name": "B*27:13:01"
+    },
+    {
+      "accession": "HLA00235",
+      "name": "B*27:14"
+    },
+    {
+      "accession": "HLA00236",
+      "name": "B*27:15"
+    },
+    {
+      "accession": "HLA01056",
+      "name": "B*27:16"
+    },
+    {
+      "accession": "HLA01130",
+      "name": "B*27:17"
+    },
+    {
+      "accession": "HLA01143",
+      "name": "B*27:18"
+    }
+  ],
+  "meta": {
+    "next": "?query=startsWith(name,%20%22B%2A27%22)&next=gASVEgAAAAAAAABdlCiMCEhMQTAxMTQzlGgBZS4",
+    "prev": null,
+    "sort": null,
+    "total": 449
+  }
+}
