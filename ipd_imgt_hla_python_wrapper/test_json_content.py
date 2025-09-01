@@ -8,7 +8,8 @@ app = marimo.App(width="medium")
 def _():
     from pathlib import Path
     import json
-    return Path, json
+    import httpx
+    return Path, httpx, json
 
 
 @app.cell
@@ -29,6 +30,47 @@ def _(json_data):
 @app.cell
 def _(json_data):
     json_data["meta"]["next"]
+    return
+
+
+@app.cell
+def _():
+    URL = 'https://www.ebi.ac.uk/cgi-bin/ipd/api/allele'
+    return (URL,)
+
+
+@app.cell
+def _():
+    initial_call = '?query=startsWith(name, "B*27")'
+    return (initial_call,)
+
+
+@app.cell
+def _(URL, httpx, initial_call):
+    response = httpx.get(URL + initial_call).json()
+
+    next_page = response["meta"]["next"]
+
+    while next_page is not None:
+        temp_response = httpx.get(URL + next_page).json()
+    
+        print(temp_response)
+    
+        response["data"].extend(temp_response["data"])
+    
+        next_page = temp_response["meta"]["next"]
+    return (response,)
+
+
+@app.cell
+def _(response):
+    response
+    return
+
+
+@app.cell
+def _(response):
+    len(response["data"])
     return
 
 
