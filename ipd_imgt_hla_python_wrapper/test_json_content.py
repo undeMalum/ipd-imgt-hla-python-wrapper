@@ -109,7 +109,27 @@ def _(response_download):
 
 @app.cell
 def _(response_download):
-    response_download.encoding
+    alleles = response_download.text.split(">")[1:]
+    return (alleles,)
+
+
+@app.cell
+def _(alleles):
+    sequences_json = {"sequences": []}
+
+    for allele in alleles:
+        allele_metadata, _, sequece = allele.split()
+        allele_metadata = allele_metadata.split("|")
+        allele_name = allele_metadata[1]
+
+        sequences_json["sequences"].append(
+            {
+               "allele_name": allele_name,
+                "sequence": sequece 
+            }
+        )
+
+    sequences_json
     return
 
 
