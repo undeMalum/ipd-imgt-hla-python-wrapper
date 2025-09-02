@@ -22,3 +22,14 @@ async def connect_to_db():
     
 
     return response
+
+
+@app.get("/downloads")
+def download_alleles():
+    DOWNLOAD_URL = 'https://www.ebi.ac.uk/cgi-bin/ipd/api/allele/download'
+    
+    params = {"query": 'startsWith(name, "B*27")', "type": "genomic"}
+    
+    response_download = httpx.get(DOWNLOAD_URL, params=params)
+    
+    return response_download

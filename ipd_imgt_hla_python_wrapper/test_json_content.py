@@ -81,22 +81,35 @@ def _(response):
 
 
 @app.cell
-def _(URL, initial_call):
-    download_call = URL + '/download' + initial_call
+def _(URL):
+    download_call = URL + '/download' #+ initial_call + "&type=genomic"
     download_call
-    return
+    return (download_call,)
 
 
 @app.cell
-def _(URL, httpx, initial_call):
-    response_download = httpx.get(URL + '/download' + initial_call)
+def _():
+    params = {"query": 'startsWith(name, "B*27")', "type": "genomic"}
+    params
+    return (params,)
+
+
+@app.cell
+def _(download_call, httpx, params):
+    response_download = httpx.get(download_call, params=params)
+    response_download.url
     return (response_download,)
 
 
 @app.cell
 def _(response_download):
-    response_download
-    response_download.json()
+    response_download.text
+    return
+
+
+@app.cell
+def _(response_download):
+    response_download.encoding
     return
 
 
