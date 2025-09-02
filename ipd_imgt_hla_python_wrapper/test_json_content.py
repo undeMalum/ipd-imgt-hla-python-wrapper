@@ -59,7 +59,13 @@ def _(URL, httpx, initial_call):
         response["data"].extend(temp_response["data"])
 
         next_page = temp_response["meta"]["next"]
-    return (response,)
+    return next_page, response
+
+
+@app.cell
+def _(next_page):
+    next_page
+    return
 
 
 @app.cell
@@ -71,6 +77,13 @@ def _(response):
 @app.cell
 def _(response):
     len(response["data"])
+    return
+
+
+@app.cell
+def _(URL, initial_call):
+    download_call = URL + '/download' + initial_call
+    download_call
     return
 
 
