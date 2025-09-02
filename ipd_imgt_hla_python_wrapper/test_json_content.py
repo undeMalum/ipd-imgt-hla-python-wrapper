@@ -15,7 +15,7 @@ def _():
 @app.cell
 def _(Path, json):
     json_path = Path(__file__).resolve() / "../../archives/response.json"
-    
+
     with open(json_path, "r") as json_file:
         json_data = json.load(json_file)
     return (json_data,)
@@ -53,11 +53,11 @@ def _(URL, httpx, initial_call):
 
     while next_page is not None:
         temp_response = httpx.get(URL + next_page).json()
-    
-        print(temp_response)
-    
+
+        print(temp_response["data"])
+
         response["data"].extend(temp_response["data"])
-    
+
         next_page = temp_response["meta"]["next"]
     return (response,)
 
@@ -71,6 +71,19 @@ def _(response):
 @app.cell
 def _(response):
     len(response["data"])
+    return
+
+
+@app.cell
+def _(URL, httpx, initial_call):
+    response_download = httpx.get(URL + '/download' + initial_call)
+    return (response_download,)
+
+
+@app.cell
+def _(response_download):
+    response_download
+    response_download.json()
     return
 
 

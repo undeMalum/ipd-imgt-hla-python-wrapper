@@ -13,7 +13,7 @@ async def connect_to_db():
     
     next_page = response["meta"]["next"]
     
-    while next_page is None:
+    while next_page is not None:
         temp_response = httpx.get(URL + next_page).json()
         
         response["data"].extend(temp_response["data"])
