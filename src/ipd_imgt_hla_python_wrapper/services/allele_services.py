@@ -38,18 +38,20 @@ async def download_alleles(
     sequences = []
 
     for allele in alleles:
-        allele_metadata, _, sequece = allele.split()
+        allele_metadata, _, sequence = allele.split()
         allele_metadata = allele_metadata.split("|")
         allele_name = allele_metadata[1]
 
-        sequences.append({"allele_name": allele_name, "sequence": sequece})
+        sequences.append({"allele_name": allele_name, "sequence": sequence})
 
     return {"sequences": sequences}
 
 
 if __name__ == "__main__":
+    import asyncio
+
     query = 'startsWith(name, "B*27")'
 
-    data = fetch_all_alleles_from_query(query)
+    data = asyncio.run(fetch_all_alleles_from_query(query))
 
     print(data)
