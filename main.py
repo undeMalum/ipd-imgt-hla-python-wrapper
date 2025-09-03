@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from ipd_imgt_hla_python_wrapper.services.allele_services import (
+from src.ipd_imgt_hla_python_wrapper.services.allele_services import (
     fetch_all_alleles_from_query,
     download_alleles,
 )
@@ -16,7 +16,7 @@ async def get_all_alleles():
     return data
 
 
-@app.get()
+@app.get("/downloads")
 async def get_allele_sequences():
     query = 'startsWith(name, "B*27")'
     data = await download_alleles(query)

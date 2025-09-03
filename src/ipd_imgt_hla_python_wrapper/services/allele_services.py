@@ -1,6 +1,10 @@
 import httpx
 
-from allele_settings import AllelesNames, AllelesSequences, SequenceTypes
+from ipd_imgt_hla_python_wrapper.services.allele_settings import (
+    AllelesNames,
+    AllelesSequences,
+    SequenceTypes,
+)
 from ipd_imgt_hla_python_wrapper.urls import ALLELE_URL, DOWNLOAD_URL
 
 
@@ -18,7 +22,7 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
 
             next_page = payload["meta"]["next"]
 
-    return {"data": results, "meta": {"total": next_page["meta"]["total"]}}
+    return {"data": results, "meta": {"total": payload["meta"]["total"]}}
 
 
 async def download_alleles(
@@ -45,7 +49,7 @@ async def download_alleles(
 
 if __name__ == "__main__":
     query = 'startsWith(name, "B*27")'
-    
+
     data = fetch_all_alleles_from_query(query)
-    
+
     print(data)
