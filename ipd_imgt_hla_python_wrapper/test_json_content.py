@@ -9,6 +9,7 @@ def _():
     from pathlib import Path
     import json
     import httpx
+
     return Path, httpx, json
 
 
@@ -35,7 +36,7 @@ def _(json_data):
 
 @app.cell
 def _():
-    URL = 'https://www.ebi.ac.uk/cgi-bin/ipd/api/allele'
+    URL = "https://www.ebi.ac.uk/cgi-bin/ipd/api/allele"
     return (URL,)
 
 
@@ -82,7 +83,7 @@ def _(response):
 
 @app.cell
 def _(URL):
-    download_call = URL + '/download' #+ initial_call + "&type=genomic"
+    download_call = URL + "/download"  # + initial_call + "&type=genomic"
     download_call
     return (download_call,)
 
@@ -123,10 +124,7 @@ def _(alleles):
         allele_name = allele_metadata[1]
 
         sequences_json["sequences"].append(
-            {
-               "allele_name": allele_name,
-                "sequence": sequece 
-            }
+            {"allele_name": allele_name, "sequence": sequece}
         )
 
     sequences_json
@@ -136,6 +134,7 @@ def _(alleles):
 @app.cell
 def _():
     import marimo as mo
+
     return
 
 
