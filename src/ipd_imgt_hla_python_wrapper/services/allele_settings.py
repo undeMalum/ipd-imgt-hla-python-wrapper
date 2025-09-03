@@ -27,7 +27,7 @@ class AllelesSequences(BaseModel):
 
 
 @unique
-class SequenceTypes(Enum):
+class SequenceTypes(str, Enum):
     PROTEIN = "protein"
     GENOMIC = "genomic"
     CODING = "coding"
