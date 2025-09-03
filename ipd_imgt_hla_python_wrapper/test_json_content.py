@@ -89,7 +89,7 @@ def _(URL):
 
 @app.cell
 def _():
-    params = {"query": 'startsWith(name, "B")', "type": "genomic"}
+    params = {"query": 'startsWith(name, "B*27")', "type": "genomic"}
     params
     return (params,)
 
