@@ -1,3 +1,5 @@
+from enum import Enum, unique
+
 from pydantic import BaseModel
 
 
@@ -22,3 +24,10 @@ class AllelesNames(BaseModel):
 
 class AllelesSequences(BaseModel):
     sequences: list[Sequence]
+
+
+@unique
+class SequenceTypes(Enum):
+    PROTEIN = "protein"
+    GENOMIC = "genomic"
+    CODING = "coding"
