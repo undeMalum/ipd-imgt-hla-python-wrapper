@@ -7,9 +7,6 @@ class SingleAllele(BaseModel):
 
 
 class MetaData(BaseModel):
-    next: str | None
-    prev: str | None
-    sort: str | None
     total: int
 
 
