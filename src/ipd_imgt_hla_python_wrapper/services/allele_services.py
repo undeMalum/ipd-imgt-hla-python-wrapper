@@ -47,6 +47,18 @@ async def download_alleles(
     return {"sequences": sequences}
 
 
+def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
+    allele_accession_list = [allele["accession"] for allele in allele_names["data"]]
+
+    return allele_accession_list
+
+
+def donwload_over_1000_alele(
+    allele_accession_list: list[str], seq_type: SequenceTypes = SequenceTypes.GENOMIC
+) -> AllelesSequences:
+    pass
+
+
 if __name__ == "__main__":
     import asyncio
 
@@ -54,4 +66,5 @@ if __name__ == "__main__":
 
     data = asyncio.run(fetch_all_alleles_from_query(query))
 
-    print(data)
+    accession_list = retrieve_allele_accession_numbers(data)
+    print(accession_list)

@@ -58,8 +58,8 @@ def _(df):
 def _(pl, renamed_col_df):
     extract_allele_name = renamed_col_df.with_columns(
         pl.col("allele_name")
-          .str.extract(r"\|(.*?)\|", 1)   # capture everything between first and second |
-          .alias("allele_name")
+        .str.extract(r"\|(.*?)\|", 1)  # capture everything between first and second |
+        .alias("allele_name")
     )
 
     extract_allele_name
@@ -79,10 +79,8 @@ def _(extract_allele_name, pl):
 @app.cell
 def _(pl, renamed_col_df):
     both_simultaneously = renamed_col_df.with_columns(
-        pl.col("allele_name")
-            .str.extract(r"\|(.*?)\|", 1)
-            .alias("allele_name"),
-        pl.col("sequences").str.replace("bp", "").alias("sequences")
+        pl.col("allele_name").str.extract(r"\|(.*?)\|", 1).alias("allele_name"),
+        pl.col("sequences").str.replace("bp", "").alias("sequences"),
     )
     both_simultaneously
     type(both_simultaneously)
@@ -101,6 +99,7 @@ def _():
     import marimo as mo
     import httpx
     import polars as pl
+
     return httpx, pl
 
 
