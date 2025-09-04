@@ -134,6 +134,16 @@ def _(alleles):
 
 
 @app.cell
+def _(httpx):
+    download_over_1000_allele_response = httpx.get(
+        'https://www.ebi.ac.uk/cgi-bin/ipd/api/allele/download?query=startsWith(name, "B")&type=genomic'
+    )
+
+    download_over_1000_allele_response.text
+    return
+
+
+@app.cell
 def _():
     import marimo as mo
 

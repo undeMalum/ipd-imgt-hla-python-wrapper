@@ -18,7 +18,7 @@ async def get_all_alleles():
 
 @app.get("/downloads")
 async def get_allele_sequences():
-    query = 'startsWith(name, "B*27")'
+    query = 'startsWith(name, "B")'
     data = await download_alleles(query)
 
     return data

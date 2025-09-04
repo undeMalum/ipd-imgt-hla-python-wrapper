@@ -57,37 +57,41 @@ async def donwload_over_1000_alele(
     allele_accession_list: list[str], seq_type: SequenceTypes = SequenceTypes.GENOMIC
 ) -> AllelesSequences:
     sequences = []
-    
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         for allele in allele_accession_list:
             single_allele_url = f"{ALLELE_URL}/{allele}"
             response = await client.get(single_allele_url)
-            
+
             allele_info = response.json()
-            
+
             status = allele_info["status"]
-            
+
             if status == "Deleted":
                 continue
-            
+
             sequence = allele_info["sequence"].get(f"{seq_type.value}")
-        
+
             if sequence is None:
                 continue
-            
+
             sequences.append({"allele_name": allele_info["name"], "sequence": sequence})
-    
+
     return {"sequences": sequences}
+
+
+async def main():
+    query = 'startsWith(name, "B*27")'
+
+    data = await fetch_all_alleles_from_query(query)
+
+    accession_list = retrieve_allele_accession_numbers(data)
+
+    downloaded_sequences = await donwload_over_1000_alele(accession_list)
+    print(downloaded_sequences)
 
 
 if __name__ == "__main__":
     import asyncio
 
-    query = 'startsWith(name, "B*27")'
-
-    data = asyncio.run(fetch_all_alleles_from_query(query))
-
-    accession_list = retrieve_allele_accession_numbers(data)
-    
-    downloaded_sequences = asyncio.run(donwload_over_1000_alele(accession_list))
-    print(downloaded_sequences)
+    asyncio.run(main())
