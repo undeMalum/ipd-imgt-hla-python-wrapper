@@ -10,7 +10,7 @@ def _():
     import json
     import httpx
     import polars as pl
-    return Path, httpx, json, pl
+    return Path, httpx, json
 
 
 @app.cell
@@ -130,26 +130,6 @@ def _(alleles):
 
     sequences_json
     return
-
-
-@app.cell
-def _(alleles, pl):
-    df = pl.DataFrame({"raw": alleles})
-    df
-    return (df,)
-
-
-@app.cell
-def _(pl):
-    df = df.with_columns(
-        pl.col("raw").str.split(" ").alias("parts")
-    ).with_columns(
-        pl.col("parts").list.get(0).alias("allele_metadata"),
-        pl.col("parts").list.get(2).alias("sequence"),
-    ).drop("parts")
-
-    df
-    return (df,)
 
 
 @app.cell

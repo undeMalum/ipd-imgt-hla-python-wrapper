@@ -77,6 +77,26 @@ def _(extract_allele_name, pl):
 
 
 @app.cell
+def _(pl, renamed_col_df):
+    both_simultaneously = renamed_col_df.with_columns(
+        pl.col("allele_name")
+            .str.extract(r"\|(.*?)\|", 1)
+            .alias("allele_name"),
+        pl.col("sequences").str.replace("bp", "").alias("sequences")
+    )
+    both_simultaneously
+    type(both_simultaneously)
+    return (both_simultaneously,)
+
+
+@app.cell
+def _(both_simultaneously):
+    json = both_simultaneously.collect().write_json()
+    json
+    return
+
+
+@app.cell
 def _():
     import marimo as mo
     import httpx
