@@ -77,17 +77,18 @@ async def fetch_single_allele(
             return
 
 
-async def download_over_1000_alele(
-    allele_accession_list: list[str], seq_type: SequenceTypes = SequenceTypes.GENOMIC
+async def download_over_1000_alleles(
+    allele_accession_list: list[str],
+    seq_type: SequenceTypes = SequenceTypes.GENOMIC,
+    sem_sumb: int = 10,
 ) -> AllelesSequences:
-    semaphores = Semaphore(10)
+    semaphore = Semaphore(sem_sumb)
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         tasks = [
-            fetch_single_allele(acc, client, semaphores)
-            for acc in allele_accession_list
+            fetch_single_allele(acc, client, semaphore) for acc in allele_accession_list
         ]
-        results = asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
     sequences = []
 
@@ -103,13 +104,13 @@ async def download_over_1000_alele(
 
 
 async def main():
-    query = 'startsWith(name, "B*27")'
+    query = 'startsWith(name, "B")'
 
     data = await fetch_all_alleles_from_query(query)
 
     accession_list = retrieve_allele_accession_numbers(data)
 
-    downloaded_sequences = await download_over_1000_alele(accession_list)
+    downloaded_sequences = await download_over_1000_alleles(accession_list)
     print(downloaded_sequences)
 
 

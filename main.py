@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from src.ipd_imgt_hla_python_wrapper.services.allele_services import (
     fetch_all_alleles_from_query,
     download_alleles,
-    download_over_1000_alele,
+    download_over_1000_alleles,
     retrieve_allele_accession_numbers,
 )
 
@@ -32,6 +32,6 @@ async def get_large_number_sequences():
 
     allele_names = await fetch_all_alleles_from_query(query)
     allele_list = retrieve_allele_accession_numbers(allele_names)
-    data = await download_over_1000_alele(allele_list)
+    data = await download_over_1000_alleles(allele_list)
 
     return data
