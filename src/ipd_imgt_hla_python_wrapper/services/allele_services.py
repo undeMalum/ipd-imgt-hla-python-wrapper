@@ -8,6 +8,8 @@ from ipd_imgt_hla_python_wrapper.services.allele_settings import (
     AllelesSequences,
     SequenceTypes,
     Sequence,
+    SingleAllele,
+    MetaData,
 )
 from ipd_imgt_hla_python_wrapper.urls import ALLELE_URL, DOWNLOAD_URL
 
@@ -26,7 +28,10 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
 
             next_page = payload["meta"]["next"]
 
-    return {"data": results, "meta": {"total": payload["meta"]["total"]}}
+    return AllelesNames(
+        data=[SingleAllele(**allele) for allele in results],
+        meta=MetaData(total=payload["meta"]["total"]),
+    )
 
 
 async def download_alleles(
@@ -46,9 +51,9 @@ async def download_alleles(
         allele_metadata = allele_metadata.split("|")
         allele_name = allele_metadata[1]
 
-        sequences.append({"allele_name": allele_name, "sequence": sequence})
+        sequences.append(Sequence(allele_name=allele_name, sequence=sequence))
 
-    return {"sequences": sequences}
+    return AllelesSequences(sequences=sequences)
 
 
 def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
@@ -59,7 +64,7 @@ def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
 
 async def fetch_single_allele(
     allele_accession: str, client: httpx.AsyncClient, semaphore: Semaphore
-) -> dict:
+) -> dict | None:
     async with semaphore:
         try:
             single_allele_url = f"{ALLELE_URL}/{allele_accession}"
