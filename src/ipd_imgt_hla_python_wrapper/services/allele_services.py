@@ -94,7 +94,7 @@ async def download_over_1000_alleles(
 
     for result in results:
         if result and isinstance(result, dict) and result.get("status") != "Deleted":
-            sequence = result["sequence"].get(f"{seq_type.value}")
+            sequence = result["sequence"].get(seq_type.value)
             if sequence:
                 sequences.append(
                     Sequence(allele_name=result["name"], sequence=sequence)
