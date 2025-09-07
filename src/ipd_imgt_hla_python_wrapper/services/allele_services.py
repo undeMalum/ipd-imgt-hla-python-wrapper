@@ -1,9 +1,13 @@
+import asyncio
+from asyncio import Semaphore
+
 import httpx
 
 from ipd_imgt_hla_python_wrapper.services.allele_settings import (
     AllelesNames,
     AllelesSequences,
     SequenceTypes,
+    Sequence,
 )
 from ipd_imgt_hla_python_wrapper.urls import ALLELE_URL, DOWNLOAD_URL
 
@@ -53,31 +57,49 @@ def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
     return allele_accession_list
 
 
-async def donwload_over_1000_alele(
+async def fetch_single_allele(
+    allele_accession: str, client: httpx.AsyncClient, semaphore: Semaphore
+) -> dict:
+    async with semaphore:
+        try:
+            single_allele_url = f"{ALLELE_URL}/{allele_accession}"
+            response = await client.get(single_allele_url)
+            response.raise_for_status()
+            return response.json()
+        except httpx.TimeoutException as e:
+            print(f"Allele {allele_accession} raised {e}. External API timeout (504).")
+            return
+        except httpx.HTTPError as e:
+            print(f"Allele {allele_accession} raised {e} API error.")
+            return
+        except ValueError as e:
+            print(f"Invalid API response {e} (502). URL used {single_allele_url}")
+            return
+
+
+async def download_over_1000_alele(
     allele_accession_list: list[str], seq_type: SequenceTypes = SequenceTypes.GENOMIC
 ) -> AllelesSequences:
-    sequences = []
+    semaphores = Semaphore(10)
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        for allele in allele_accession_list:
-            single_allele_url = f"{ALLELE_URL}/{allele}"
-            response = await client.get(single_allele_url)
+        tasks = [
+            fetch_single_allele(acc, client, semaphores)
+            for acc in allele_accession_list
+        ]
+        results = asyncio.gather(*tasks, return_exceptions=True)
 
-            allele_info = response.json()
+    sequences = []
 
-            status = allele_info["status"]
+    for result in results:
+        if result and isinstance(result, dict) and result.get("status") != "Deleted":
+            sequence = result["sequence"].get(f"{seq_type.value}")
+            if sequence:
+                sequences.append(
+                    Sequence(allele_name=result["name"], sequence=sequence)
+                )
 
-            if status == "Deleted":
-                continue
-
-            sequence = allele_info["sequence"].get(f"{seq_type.value}")
-
-            if sequence is None:
-                continue
-
-            sequences.append({"allele_name": allele_info["name"], "sequence": sequence})
-
-    return {"sequences": sequences}
+    return AllelesSequences(sequences=sequences)
 
 
 async def main():
@@ -87,11 +109,9 @@ async def main():
 
     accession_list = retrieve_allele_accession_numbers(data)
 
-    downloaded_sequences = await donwload_over_1000_alele(accession_list)
+    downloaded_sequences = await download_over_1000_alele(accession_list)
     print(downloaded_sequences)
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())
