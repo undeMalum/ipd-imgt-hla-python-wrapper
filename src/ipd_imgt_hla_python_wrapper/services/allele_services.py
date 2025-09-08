@@ -20,13 +20,16 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
 
     async with httpx.AsyncClient() as client:
         while next_page is not None:
-            response = await client.get(ALLELE_URL + next_page)
+            try:
+                response = await client.get(ALLELE_URL + next_page)
 
-            payload = response.json()
+                payload = response.json()
 
-            results.extend(payload["data"])
+                results.extend(payload["data"])
 
-            next_page = payload["meta"]["next"]
+                next_page = payload["meta"]["next"]
+            except httpx.TimeoutException as e:
+                print()
 
     return AllelesNames(
         data=[SingleAllele(**allele) for allele in results],
@@ -72,14 +75,15 @@ async def fetch_single_allele(
             response.raise_for_status()
             return response.json()
         except httpx.TimeoutException as e:
-            print(f"Allele {allele_accession} raised {e}. External API timeout (504).")
-            return
+            print(f"Timeout fetching allele {allele_accession}: {e}")
+            return None
         except httpx.HTTPError as e:
-            print(f"Allele {allele_accession} raised {e} API error.")
-            return
-        except ValueError as e:
-            print(f"Invalid API response {e} (502). URL used {single_allele_url}")
-            return
+            print(f"HTTP error fetching allele {allele_accession}: {e}")
+            return None
+        except httpx.RequestError as e:
+            print(
+                f"Request failed for allele {allele_accession} with query {single_allele_url}: {e}"
+            )
 
 
 async def download_over_1000_alleles(
@@ -108,7 +112,7 @@ async def download_over_1000_alleles(
     return AllelesSequences(sequences=sequences)
 
 
-async def main():
+async def main() -> None:
     query = 'startsWith(name, "B")'
 
     data = await fetch_all_alleles_from_query(query)
