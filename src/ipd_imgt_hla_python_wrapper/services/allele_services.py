@@ -29,7 +29,11 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
 
                 next_page = payload["meta"]["next"]
             except httpx.TimeoutException as e:
-                print()
+                print(f"Timeout fetching alleles for the query {query}: {e}")
+            except httpx.HTTPError as e:
+                print(f"HTTP error fetching alleles fro the query {query}: {e}")
+            except httpx.RequestError as e:
+                print(f"")
 
     return AllelesNames(
         data=[SingleAllele(**allele) for allele in results],
