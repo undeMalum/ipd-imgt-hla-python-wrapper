@@ -31,9 +31,9 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
             except httpx.TimeoutException as e:
                 print(f"Timeout fetching alleles for the query {query}: {e}")
             except httpx.HTTPError as e:
-                print(f"HTTP error fetching alleles fro the query {query}: {e}")
+                print(f"HTTP error fetching alleles for the query {query}: {e}")
             except httpx.RequestError as e:
-                print(f"")
+                print(f"Network error for the query {query}: {e}")
 
     return AllelesNames(
         data=[SingleAllele(**allele) for allele in results],
