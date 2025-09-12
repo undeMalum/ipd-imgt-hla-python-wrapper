@@ -1,3 +1,4 @@
+import logging
 import asyncio
 from asyncio import Semaphore
 
@@ -12,6 +13,8 @@ from ipd_imgt_hla_python_wrapper.services.allele_settings import (
     MetaData,
 )
 from ipd_imgt_hla_python_wrapper.urls import ALLELE_URL, DOWNLOAD_URL
+
+logger = logging.getLogger(__name__)
 
 
 async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
@@ -28,12 +31,20 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
                 results.extend(payload["data"])
 
                 next_page = payload["meta"]["next"]
-            except httpx.TimeoutException as e:
+            except* httpx.TimeoutException as e:
                 print(f"Timeout fetching alleles for the query {query}: {e}")
-            except httpx.HTTPError as e:
+                logger.error()
+            except* httpx.HTTPError as e:
                 print(f"HTTP error fetching alleles for the query {query}: {e}")
-            except httpx.RequestError as e:
+            except* httpx.RequestError as e:
                 print(f"Network error for the query {query}: {e}")
+                
+            # except httpx.RequestError as e:
+            #     logger.error(f"Network error fetching alleles: {e}")
+            #     raise HTTPException(status_code=502, detail="External API network error")
+            # except httpx.HTTPStatusError as e:
+            #     logger.error(f"HTTP error {e.response.status_code} fetching alleles: {e}")
+            #     raise HTTPException(status_code=e.response.status_code, detail="External API error")
 
     return AllelesNames(
         data=[SingleAllele(**allele) for allele in results],
@@ -88,6 +99,7 @@ async def fetch_single_allele(
             print(
                 f"Request failed for allele {allele_accession} with query {single_allele_url}: {e}"
             )
+            return None
 
 
 async def download_over_1000_alleles(
