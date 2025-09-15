@@ -70,7 +70,7 @@ async def download_alleles(
             response = await client.get(DOWNLOAD_URL, params=params)
             response.raise_for_status()
 
-        except* httpx.TimeoutException as e:
+        except httpx.TimeoutException as e:
             logger.error(
                 f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}"
             )
@@ -78,7 +78,7 @@ async def download_alleles(
                 status_code=504,
                 detail=f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}",
             )
-        except* httpx.HTTPError as e:
+        except httpx.HTTPError as e:
             logger.error(
                 f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}"
             )
@@ -86,7 +86,7 @@ async def download_alleles(
                 status_code=e.response.status_code,
                 detail=f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}",
             )
-        except* httpx.RequestError as e:
+        except httpx.RequestError as e:
             logger.error(
                 f"Network error for the query {query} and sequence type {seq_type}: {e}"
             )
@@ -118,7 +118,9 @@ async def download_alleles(
 
 
 def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
-    allele_accession_list = [allele["accession"] for allele in allele_names["data"]]
+    allele_accession_list = [allele.accession for allele in allele_names["data"]]
+    
+    logger.info(f"Successfully retrieved accession number for {len(allele_accession_list)} alleles.")
 
     return allele_accession_list
 
@@ -132,14 +134,14 @@ async def fetch_single_allele(
             response = await client.get(single_allele_url)
             response.raise_for_status()
             return response.json()
-        except* httpx.TimeoutException as e:
-            print(f"Timeout fetching allele {allele_accession}: {e}")
+        except httpx.TimeoutException as e:
+            logger.warning(f"Timeout fetching allele {allele_accession}: {e}")
             return None
-        except* httpx.HTTPError as e:
-            print(f"HTTP error fetching allele {allele_accession}: {e}")
+        except httpx.HTTPError as e:
+            logger.warning(f"HTTP error fetching allele {allele_accession}: {e}")
             return None
-        except* httpx.RequestError as e:
-            print(
+        except httpx.RequestError as e:
+            logger.warning(
                 f"Request failed for allele {allele_accession} with query {single_allele_url}: {e}"
             )
             return None
