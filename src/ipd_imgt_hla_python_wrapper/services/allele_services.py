@@ -27,6 +27,8 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
             try:
                 response = await client.get(ALLELE_URL + next_page)
 
+                response.raise_for_status()
+
                 payload = response.json()
 
                 results.extend(payload["data"])
@@ -50,6 +52,8 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
                     status_code=502, detail=f"Network error for the query {query}: {e}"
                 )
 
+    logger.info(f"Successfully fetched {len(results)} for the query: {query}")
+
     return AllelesNames(
         data=[SingleAllele(**allele) for allele in results],
         meta=MetaData(total=payload["meta"]["total"]),
@@ -62,7 +66,38 @@ async def download_alleles(
     params = {"query": query, "type": seq_type.value}
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(DOWNLOAD_URL, params=params)
+        try:
+            response = await client.get(DOWNLOAD_URL, params=params)
+            response.raise_for_status()
+
+        except* httpx.TimeoutException as e:
+            logger.error(
+                f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}"
+            )
+            raise fastapi.HTTPException(
+                status_code=504,
+                detail=f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}",
+            )
+        except* httpx.HTTPError as e:
+            logger.error(
+                f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}"
+            )
+            raise fastapi.HTTPException(
+                status_code=e.response.status_code,
+                detail=f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}",
+            )
+        except* httpx.RequestError as e:
+            logger.error(
+                f"Network error for the query {query} and sequence type {seq_type}: {e}"
+            )
+            raise fastapi.HTTPException(
+                status_code=502,
+                detail=f"Network error for the query {query} and sequence type {seq_type}: {e}",
+            )
+
+    logger.info(
+        f"Successfully downloaded sequences for the query {query} with the sequence type {seq_type}"
+    )
 
     alleles = response.text.split(">")[1:]
 
@@ -74,6 +109,10 @@ async def download_alleles(
         allele_name = allele_metadata[1]
 
         sequences.append(Sequence(allele_name=allele_name, sequence=sequence))
+
+    logger.info(
+        f"Successfully transformed {len(sequences)} sequences for the query {query} and the sequence type {seq_type} from a text file into json."
+    )
 
     return AllelesSequences(sequences=sequences)
 
@@ -93,13 +132,13 @@ async def fetch_single_allele(
             response = await client.get(single_allele_url)
             response.raise_for_status()
             return response.json()
-        except httpx.TimeoutException as e:
+        except* httpx.TimeoutException as e:
             print(f"Timeout fetching allele {allele_accession}: {e}")
             return None
-        except httpx.HTTPError as e:
+        except* httpx.HTTPError as e:
             print(f"HTTP error fetching allele {allele_accession}: {e}")
             return None
-        except httpx.RequestError as e:
+        except* httpx.RequestError as e:
             print(
                 f"Request failed for allele {allele_accession} with query {single_allele_url}: {e}"
             )
