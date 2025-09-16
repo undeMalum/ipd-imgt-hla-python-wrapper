@@ -179,7 +179,7 @@ async def download_over_1000_alleles(
 
 
 async def main() -> None:
-    query = 'startsWith(name, "B")'
+    query = 'and(startsWith(name, "B*27"), eq(status, "Public"))'
 
     data = await fetch_all_alleles_from_query(query)
 
