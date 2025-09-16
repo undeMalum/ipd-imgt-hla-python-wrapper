@@ -31,3 +31,10 @@ class SequenceTypes(str, Enum):
     PROTEIN = "protein"
     GENOMIC = "genomic"
     CODING = "coding"
+
+
+@unique
+class APIOperations(str, Enum):
+    FETCHING_ALLELES_FROM_QUERY = "fetching alleles from query"
+    DOWNLOADING_ALLELE_SEQUENES = "downloading allele sequences"
+    FETCHING_SINGLE_ALLELE = "fetching single allele"

@@ -25,7 +25,7 @@ async def get_all_alleles():
     logger.info("GET '/' endpoint called.")
 
     query = 'startsWith(name, "B*27")'
-    
+
     async with httpx.AsyncClient() as client:
         data = await fetch_all_alleles_from_query(client, query)
 
@@ -37,7 +37,7 @@ async def get_allele_sequences():
     logger.info("GET '/downloads' endpoint called.")
 
     query = 'startsWith(name, "B*27")'
-    
+
     async with httpx.AsyncClient() as client:
         data = await download_alleles(client, query)
 
