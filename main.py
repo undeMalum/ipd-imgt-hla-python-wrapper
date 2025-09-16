@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 
 from src.ipd_imgt_hla_python_wrapper.services.allele_services import (
@@ -7,11 +9,20 @@ from src.ipd_imgt_hla_python_wrapper.services.allele_services import (
     retrieve_allele_accession_numbers,
 )
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("ipd_hla_wrapper.log"), logging.StreamHandler()],
+)
+loggger = logging.getLogger(__name__)
+
 app = FastAPI()
 
 
 @app.get("/")
 async def get_all_alleles():
+    loggger.info("GET '/' endpoint called.")
+
     query = 'startsWith(name, "B*27")'
     data = await fetch_all_alleles_from_query(query)
 
@@ -20,6 +31,8 @@ async def get_all_alleles():
 
 @app.get("/downloads")
 async def get_allele_sequences():
+    loggger.info("GET '/downloads' endpoint called.")
+
     query = 'startsWith(name, "B*27")'
     data = await download_alleles(query)
 
@@ -28,6 +41,8 @@ async def get_allele_sequences():
 
 @app.get("/downloads/large")
 async def get_large_number_sequences():
+    loggger.info("GET '/downloads/large' endpoint called.")
+
     query = 'startsWith(name, "B")'
 
     allele_names = await fetch_all_alleles_from_query(query)

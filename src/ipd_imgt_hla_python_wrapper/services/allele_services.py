@@ -3,8 +3,7 @@ import asyncio
 from asyncio import Semaphore
 
 import httpx
-import fastapi
-
+from fastapi import HTTPException
 from ipd_imgt_hla_python_wrapper.services.allele_settings import (
     AllelesNames,
     AllelesSequences,
@@ -22,7 +21,7 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
     results = []
     next_page = f"?query={query}"
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30) as client:
         while next_page is not None:
             try:
                 response = await client.get(ALLELE_URL + next_page)
@@ -36,19 +35,19 @@ async def fetch_all_alleles_from_query(query: str) -> AllelesNames:
                 next_page = payload["meta"]["next"]
             except httpx.TimeoutException as e:
                 logger.error(f"Timeout fetching alleles for the query {query}: {e}")
-                raise fastapi.HTTPException(
+                raise HTTPException(
                     status_code=504,
                     detail=f"Timeout fetching alleles for the query {query}: {e}",
                 )
-            except httpx.HTTPError as e:
+            except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error fetching alleles for the query {query}: {e}")
-                raise fastapi.HTTPException(
+                raise HTTPException(
                     status_code=e.response.status_code,
                     detail=f"HTTP error fetching alleles for the query {query}: {e}",
                 )
             except httpx.RequestError as e:
                 logger.error(f"Network error for the query {query}: {e}")
-                raise fastapi.HTTPException(
+                raise HTTPException(
                     status_code=502, detail=f"Network error for the query {query}: {e}"
                 )
 
@@ -65,7 +64,7 @@ async def download_alleles(
 ) -> AllelesSequences:
     params = {"query": query, "type": seq_type.value}
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=60.0) as client:
         try:
             response = await client.get(DOWNLOAD_URL, params=params)
             response.raise_for_status()
@@ -74,7 +73,7 @@ async def download_alleles(
             logger.error(
                 f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}"
             )
-            raise fastapi.HTTPException(
+            raise HTTPException(
                 status_code=504,
                 detail=f"Timeout fetching alleles for the query {query} and sequence type {seq_type}: {e}",
             )
@@ -82,7 +81,7 @@ async def download_alleles(
             logger.error(
                 f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}"
             )
-            raise fastapi.HTTPException(
+            raise HTTPException(
                 status_code=e.response.status_code,
                 detail=f"HTTP error fetching alleles for the query {query} and sequence type {seq_type}: {e}",
             )
@@ -90,7 +89,7 @@ async def download_alleles(
             logger.error(
                 f"Network error for the query {query} and sequence type {seq_type}: {e}"
             )
-            raise fastapi.HTTPException(
+            raise HTTPException(
                 status_code=502,
                 detail=f"Network error for the query {query} and sequence type {seq_type}: {e}",
             )
@@ -118,9 +117,11 @@ async def download_alleles(
 
 
 def retrieve_allele_accession_numbers(allele_names: AllelesNames) -> list[str]:
-    allele_accession_list = [allele.accession for allele in allele_names["data"]]
-    
-    logger.info(f"Successfully retrieved accession number for {len(allele_accession_list)} alleles.")
+    allele_accession_list = [allele.accession for allele in allele_names.data]
+
+    logger.info(
+        f"Successfully retrieved accession number for {len(allele_accession_list)} alleles."
+    )
 
     return allele_accession_list
 
@@ -150,11 +151,11 @@ async def fetch_single_allele(
 async def download_over_1000_alleles(
     allele_accession_list: list[str],
     seq_type: SequenceTypes = SequenceTypes.GENOMIC,
-    sem_sumb: int = 10,
+    max_concurrent_requests: int = 10,
 ) -> AllelesSequences:
     logger.info(f"Start the download of {len(allele_accession_list)} allele sequences.")
-    
-    semaphore = Semaphore(sem_sumb)
+
+    semaphore = Semaphore(max_concurrent_requests)
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         tasks = [
@@ -171,7 +172,7 @@ async def download_over_1000_alleles(
                 sequences.append(
                     Sequence(allele_name=result["name"], sequence=sequence)
                 )
-                
+
     logger.info(f"Downloaded {len(sequences)}/{len(allele_accession_list)} sequences.")
 
     return AllelesSequences(sequences=sequences)
