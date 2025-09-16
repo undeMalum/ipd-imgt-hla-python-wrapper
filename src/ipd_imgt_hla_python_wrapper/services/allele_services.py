@@ -141,7 +141,7 @@ client: httpx.AsyncClient, semaphore: Semaphore, allele_accession: str
             return None
         except httpx.RequestError as e:
             logger.warning(
-                f"Request failed for allele {allele_accession} with query {single_allele_url}: {e}"
+                f"Request failed for allele {allele_accession}: {e}"
             )
             return None
 
