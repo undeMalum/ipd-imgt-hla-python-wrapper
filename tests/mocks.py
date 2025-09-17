@@ -7,7 +7,7 @@ class MockHTTPXResponse:
         self.json_data = json_data
 
     def json(self):
-        return self.json
+        return self.json_data
 
     def raise_for_status(self):
         if self.status_code == 502:

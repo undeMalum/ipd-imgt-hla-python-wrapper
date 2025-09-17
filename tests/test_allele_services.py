@@ -24,9 +24,9 @@ async def test_fetch_all_allele_from_query(monkeypatch, query):
             {"accession": "HLA00220", "name": "B*27:01"},
             {"accession": "HLA00221", "name": "B*27:02:01:01"},
         ],
-        "meta": 2,
+        "meta": {"next": None, "prev": None, "sort": None, "total": 2},
     }
-    
+
     expected_data_as_pydantic = AllelesNames(
         data=[
             SingleAllele(accession="HLA00220", name="B*27:01"),
@@ -42,6 +42,7 @@ async def test_fetch_all_allele_from_query(monkeypatch, query):
 
     async with httpx.AsyncClient() as client:
         result = await fetch_all_alleles_from_query(client, query)
-        
+
     assert result == expected_data_as_pydantic
+    assert result.data == expected_data_as_pydantic.data
     assert result.meta == expected_data_as_pydantic.meta
