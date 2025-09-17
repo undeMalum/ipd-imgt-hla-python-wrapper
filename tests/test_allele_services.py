@@ -165,30 +165,22 @@ async def test_fetch_single_allele_failure_http_status(monkeypatch, semaphore):
 @pytest.mark.allele_services
 def test_retrieve_accession_numbers(allele_data_pydantic):
     result = retrieve_allele_accession_numbers(allele_data_pydantic)
-    
+
     assert result == ["HLA00220", "HLA00221"]
     assert len(result) == 2
-    
+
 
 @pytest.mark.allele_services
 @pytest.mark.asyncio
-async def test_download_over_1000_allele(monkeypatch):
+async def test_download_allele(monkeypatch):
     mock_single_allele_responses = [
-        {
-            "name": "B*27:01",
-            "status": "Public",
-            "sequence": {"genomic": "ATCGATCG"}
-        },
-        {
-            "name": "B*27:02", 
-            "status": "Public",
-            "sequence": {"genomic": "GCTAGCTA"}
-        },
-        None  # Failed request should be handled
+        {"name": "B*27:01", "status": "Public", "sequence": {"genomic": "ATCGATCG"}},
+        {"name": "B*27:02", "status": "Public", "sequence": {"genomic": "GCTAGCTA"}},
+        None,  # Failed request should be handled
     ]
-    
+
     call_count = 0
-    
+
     async def mock_get(*args, **kwargs):
         nonlocal call_count
         if call_count < len(mock_single_allele_responses) - 1:
@@ -198,16 +190,37 @@ async def test_download_over_1000_allele(monkeypatch):
         else:
             call_count += 1
             raise MockHTTPXResponse(502, {})
-    
+
     monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
-    
+
     async with httpx.AsyncClient() as client:
         result = await download_over_1000_alleles(
-            client,
-            ["HLA00220", "HLA00221", "HLA00222"],
-            max_concurrent_requests=2
+            client, ["HLA00220", "HLA00221", "HLA00222"], max_concurrent_requests=2
         )
-    
+
     assert len(result.sequences) == 2
     assert result.sequences[0].allele_name == "B*27:01"
     assert result.sequences[1].allele_name == "B*27:02"
+
+
+@pytest.mark.allele_services
+@pytest.mark.asyncio
+async def test_download_over_1000_allele(monkeypatch, query):
+    mock_fasta_response = """>HLA00220|B*27:01|1089 bp
+ATGCGGGTCACGGCGCCCCGAACCCTCCTCCTGC
+>HLA00221|B*27:02|1089 bp
+CTCTGACCATGAGGCCACCCTGAGGTGCTGGGCC"""
+
+    async def mock_get(*args, **kwargs):
+        return MockHTTPXResponse(200, {}, mock_fasta_response)
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+
+    async with httpx.AsyncClient() as client:
+        result = await download_alleles(client, query)
+
+    assert len(result.sequences) == 2
+    assert result.sequences[0].allele_name == "B*27:01"
+    assert result.sequences[1].allele_name == "B*27:02"
+    assert result.sequences[0].sequence == "ATGCGGGTCACGGCGCCCCGAACCCTCCTCCTGC"
+    assert result.sequences[1].sequence == "CTCTGACCATGAGGCCACCCTGAGGTGCTGGGCC"

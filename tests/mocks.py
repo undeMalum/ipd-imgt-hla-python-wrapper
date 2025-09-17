@@ -2,9 +2,10 @@ import httpx
 
 
 class MockHTTPXResponse:
-    def __init__(self, status_code: int, json_data: dict):
+    def __init__(self, status_code: int, json_data: dict, text_data: str = ""):
         self.status_code = status_code
         self.json_data = json_data
+        self.text = text_data
 
     def json(self):
         return self.json_data
@@ -20,3 +21,9 @@ class MockHTTPXResponse:
                 request=httpx.Request,
                 response=httpx.Response,
             )
+            
+            
+if __name__ == "__main__":
+    mock = MockHTTPXResponse(200, {}, "Test text")
+    print(mock.text)
+    
