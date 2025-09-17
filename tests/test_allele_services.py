@@ -172,7 +172,7 @@ def test_retrieve_accession_numbers(allele_data_pydantic):
 
 @pytest.mark.allele_services
 @pytest.mark.asyncio
-async def test_download_allele(monkeypatch):
+async def test_download_over_1000_allele(monkeypatch):
     mock_single_allele_responses = [
         {"name": "B*27:01", "status": "Public", "sequence": {"genomic": "ATCGATCG"}},
         {"name": "B*27:02", "status": "Public", "sequence": {"genomic": "GCTAGCTA"}},
@@ -205,7 +205,7 @@ async def test_download_allele(monkeypatch):
 
 @pytest.mark.allele_services
 @pytest.mark.asyncio
-async def test_download_over_1000_allele(monkeypatch, query):
+async def test_download_allele(monkeypatch, query):
     mock_fasta_response = """>HLA00220|B*27:01|1089 bp
 ATGCGGGTCACGGCGCCCCGAACCCTCCTCCTGC
 >HLA00221|B*27:02|1089 bp
