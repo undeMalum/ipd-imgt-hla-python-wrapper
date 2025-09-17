@@ -17,23 +17,26 @@ from ipd_imgt_hla_python_wrapper.services.allele_settings import (
 from mocks import MockHTTPXResponse
 
 
-@pytest.mark.asyncio
-async def test_fetch_all_allele_from_query(monkeypatch, query):
-    expected_allele_data = {
-        "data": [
-            {"accession": "HLA00220", "name": "B*27:01"},
-            {"accession": "HLA00221", "name": "B*27:02:01:01"},
-        ],
-        "meta": {"next": None, "prev": None, "sort": None, "total": 2},
-    }
-
-    expected_data_as_pydantic = AllelesNames(
+@pytest.fixture
+def allele_data_pydantic():
+    return AllelesNames(
         data=[
             SingleAllele(accession="HLA00220", name="B*27:01"),
-            SingleAllele(accession="HLA00221", name="B*27:02:01:01"),
+            SingleAllele(accession="HLA00221", name="B*27:02"),
         ],
         meta=MetaData(total=2),
     )
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_allele_from_query(monkeypatch, query, allele_data_pydantic):
+    expected_allele_data = {
+        "data": [
+            {"accession": "HLA00220", "name": "B*27:01"},
+            {"accession": "HLA00221", "name": "B*27:02"},
+        ],
+        "meta": {"next": None, "prev": None, "sort": None, "total": 2},
+    }
 
     async def mock_get(*args, **kwargs):
         return MockHTTPXResponse(200, expected_allele_data)
@@ -43,6 +46,38 @@ async def test_fetch_all_allele_from_query(monkeypatch, query):
     async with httpx.AsyncClient() as client:
         result = await fetch_all_alleles_from_query(client, query)
 
-    assert result == expected_data_as_pydantic
-    assert result.data == expected_data_as_pydantic.data
-    assert result.meta == expected_data_as_pydantic.meta
+    assert result == allele_data_pydantic
+    assert result.data == allele_data_pydantic.data
+    assert result.meta.total == 2
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_alleles_pagination(monkeypatch, query, allele_data_pydantic):
+    page1_response = {
+        "data": [{"accession": "HLA00220", "name": "B*27:01"}],
+        "meta": {"next": "?page=2", "prev": None, "sort": None, "total": 2},
+    }
+    
+    page2_response = {
+        "data": [{"accession": "HLA00221", "name": "B*27:02"}],
+        "meta": {"next": None, "prev": "?page=1", "sort": None, "total": 2},
+    }
+    
+    call_count = 0
+    
+    async def mock_get(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return MockHTTPXResponse(200, page1_response)
+        else:
+            return MockHTTPXResponse(200, page2_response)
+    
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+    
+    async with httpx.AsyncClient() as client:
+        result = await fetch_all_alleles_from_query(client, query)
+    
+    assert result.data == allele_data_pydantic.data
+    assert len(result.data) == 2
+    assert call_count == 2
