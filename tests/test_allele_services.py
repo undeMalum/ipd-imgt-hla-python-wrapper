@@ -28,8 +28,8 @@ def allele_data_pydantic():
         ],
         meta=MetaData(total=2),
     )
-    
-    
+
+
 @pytest.fixture
 def semaphore():
     return Semaphore(1)
@@ -107,7 +107,7 @@ async def test_fetch_single_allele_success(monkeypatch, semaphore):
         return MockHTTPXResponse(200, mock_single_allele_response)
 
     monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
-    
+
     async with httpx.AsyncClient() as client:
         result = await fetch_single_allele(client, semaphore, "HLA00220")
 
@@ -115,8 +115,8 @@ async def test_fetch_single_allele_success(monkeypatch, semaphore):
     assert result["accession"] == "HLA00220"
     assert result["name"] == "B*27:01"
     assert result["status"] == "Public"
-    
-    
+
+
 @pytest.mark.asyncio
 async def test_fetch_single_allele_failure_502(monkeypatch, semaphore):
     async def mock_get(*args, **kwargs):
@@ -134,6 +134,19 @@ async def test_fetch_single_allele_failure_502(monkeypatch, semaphore):
 async def test_fetch_single_allele_failure_504(monkeypatch, semaphore):
     async def mock_get(*args, **kwargs):
         return MockHTTPXResponse(504, {})
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+
+    async with httpx.AsyncClient() as client:
+        result = await fetch_single_allele(client, semaphore, "HLA00220")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_single_allele_failure_http_status(monkeypatch, semaphore):
+    async def mock_get(*args, **kwargs):
+        return MockHTTPXResponse(400, {})
 
     monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
 
