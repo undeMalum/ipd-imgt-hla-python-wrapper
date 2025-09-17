@@ -11,8 +11,8 @@ class MockHTTPXResponse:
 
     def raise_for_status(self):
         if self.status_code == 502:
-            raise httpx.RequestError()
+            raise httpx.RequestError("Network error")
         elif self.status_code == 504:
-            raise httpx.TimeoutException()
+            raise httpx.TimeoutException("Timeout")
         elif self.status_code >= 400:
-            raise httpx.HTTPStatusError()
+            raise httpx.HTTPStatusError(f"HTTP error: {self.status_code}")

@@ -1,3 +1,5 @@
+from asyncio import Semaphore
+
 import pytest
 import httpx
 from fastapi import HTTPException
@@ -26,6 +28,11 @@ def allele_data_pydantic():
         ],
         meta=MetaData(total=2),
     )
+    
+    
+@pytest.fixture
+def semaphore():
+    return Semaphore(1)
 
 
 @pytest.mark.asyncio
@@ -57,14 +64,14 @@ async def test_fetch_all_alleles_pagination(monkeypatch, query, allele_data_pyda
         "data": [{"accession": "HLA00220", "name": "B*27:01"}],
         "meta": {"next": "?page=2", "prev": None, "sort": None, "total": 2},
     }
-    
+
     page2_response = {
         "data": [{"accession": "HLA00221", "name": "B*27:02"}],
         "meta": {"next": None, "prev": "?page=1", "sort": None, "total": 2},
     }
-    
+
     call_count = 0
-    
+
     async def mock_get(*args, **kwargs):
         nonlocal call_count
         call_count += 1
@@ -72,12 +79,65 @@ async def test_fetch_all_alleles_pagination(monkeypatch, query, allele_data_pyda
             return MockHTTPXResponse(200, page1_response)
         else:
             return MockHTTPXResponse(200, page2_response)
-    
+
     monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
-    
+
     async with httpx.AsyncClient() as client:
         result = await fetch_all_alleles_from_query(client, query)
-    
+
     assert result.data == allele_data_pydantic.data
     assert len(result.data) == 2
     assert call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_fetch_single_allele_success(monkeypatch, semaphore):
+    mock_single_allele_response = {
+        "accession": "HLA00220",
+        "name": "B*27:01",
+        "status": "Public",
+        "sequence": {
+            "genomic": "ATCGATCGATCGAATTCCGGTTAACCGGTTAACCGGTT",
+            "protein": "MGSHSMRYFFTSVSRPGRGEPR",
+            "coding": "ATGGGCTCCCACAGCATGCGG",
+        },
+    }
+
+    async def mock_get(*args, **kwargs):
+        return MockHTTPXResponse(200, mock_single_allele_response)
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+    
+    async with httpx.AsyncClient() as client:
+        result = await fetch_single_allele(client, semaphore, "HLA00220")
+
+    assert result is not None
+    assert result["accession"] == "HLA00220"
+    assert result["name"] == "B*27:01"
+    assert result["status"] == "Public"
+    
+    
+@pytest.mark.asyncio
+async def test_fetch_single_allele_failure_502(monkeypatch, semaphore):
+    async def mock_get(*args, **kwargs):
+        return MockHTTPXResponse(502, {})
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+
+    async with httpx.AsyncClient() as client:
+        result = await fetch_single_allele(client, semaphore, "HLA00220")
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_fetch_single_allele_failure_504(monkeypatch, semaphore):
+    async def mock_get(*args, **kwargs):
+        return MockHTTPXResponse(504, {})
+
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+
+    async with httpx.AsyncClient() as client:
+        result = await fetch_single_allele(client, semaphore, "HLA00220")
+
+    assert result is None
