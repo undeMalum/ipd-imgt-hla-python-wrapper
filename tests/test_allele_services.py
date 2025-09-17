@@ -35,6 +35,7 @@ def semaphore():
     return Semaphore(1)
 
 
+@pytest.mark.allele_services
 @pytest.mark.asyncio
 async def test_fetch_all_allele_from_query(monkeypatch, query, allele_data_pydantic):
     expected_allele_data = {
@@ -58,6 +59,7 @@ async def test_fetch_all_allele_from_query(monkeypatch, query, allele_data_pydan
     assert result.meta.total == 2
 
 
+@pytest.mark.allele_services
 @pytest.mark.asyncio
 async def test_fetch_all_alleles_pagination(monkeypatch, query, allele_data_pydantic):
     page1_response = {
@@ -90,6 +92,7 @@ async def test_fetch_all_alleles_pagination(monkeypatch, query, allele_data_pyda
     assert call_count == 2
 
 
+@pytest.mark.allele_services
 @pytest.mark.asyncio
 async def test_fetch_single_allele_success(monkeypatch, semaphore):
     mock_single_allele_response = {
@@ -117,6 +120,7 @@ async def test_fetch_single_allele_success(monkeypatch, semaphore):
     assert result["status"] == "Public"
 
 
+@pytest.mark.allele_services_errors
 @pytest.mark.asyncio
 async def test_fetch_single_allele_failure_502(monkeypatch, semaphore):
     async def mock_get(*args, **kwargs):
@@ -130,6 +134,7 @@ async def test_fetch_single_allele_failure_502(monkeypatch, semaphore):
     assert result is None
 
 
+@pytest.mark.allele_services_errors
 @pytest.mark.asyncio
 async def test_fetch_single_allele_failure_504(monkeypatch, semaphore):
     async def mock_get(*args, **kwargs):
@@ -143,6 +148,7 @@ async def test_fetch_single_allele_failure_504(monkeypatch, semaphore):
     assert result is None
 
 
+@pytest.mark.allele_services_errors
 @pytest.mark.asyncio
 async def test_fetch_single_allele_failure_http_status(monkeypatch, semaphore):
     async def mock_get(*args, **kwargs):

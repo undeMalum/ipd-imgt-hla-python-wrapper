@@ -37,4 +37,6 @@ addopts = [
     "-v"
 ]
 markers = [
+    "allele_services: tests of functions providing services for interacting with the remote IPD IMGT HLA database",
+    "allele_services_errors: tests of errors for functions provising services"
 ]
