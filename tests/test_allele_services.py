@@ -160,3 +160,54 @@ async def test_fetch_single_allele_failure_http_status(monkeypatch, semaphore):
         result = await fetch_single_allele(client, semaphore, "HLA00220")
 
     assert result is None
+
+
+@pytest.mark.allele_services
+def test_retrieve_accession_numbers(allele_data_pydantic):
+    result = retrieve_allele_accession_numbers(allele_data_pydantic)
+    
+    assert result == ["HLA00220", "HLA00221"]
+    assert len(result) == 2
+    
+
+@pytest.mark.allele_services
+@pytest.mark.asyncio
+async def test_download_over_1000_allele(monkeypatch):
+    mock_single_allele_responses = [
+        {
+            "name": "B*27:01",
+            "status": "Public",
+            "sequence": {"genomic": "ATCGATCG"}
+        },
+        {
+            "name": "B*27:02", 
+            "status": "Public",
+            "sequence": {"genomic": "GCTAGCTA"}
+        },
+        None  # Failed request should be handled
+    ]
+    
+    call_count = 0
+    
+    async def mock_get(*args, **kwargs):
+        nonlocal call_count
+        if call_count < len(mock_single_allele_responses) - 1:
+            response_data = mock_single_allele_responses[call_count]
+            call_count += 1
+            return MockHTTPXResponse(200, response_data)
+        else:
+            call_count += 1
+            raise MockHTTPXResponse(502, {})
+    
+    monkeypatch.setattr("httpx.AsyncClient.get", mock_get)
+    
+    async with httpx.AsyncClient() as client:
+        result = await download_over_1000_alleles(
+            client,
+            ["HLA00220", "HLA00221", "HLA00222"],
+            max_concurrent_requests=2
+        )
+    
+    assert len(result.sequences) == 2
+    assert result.sequences[0].allele_name == "B*27:01"
+    assert result.sequences[1].allele_name == "B*27:02"
